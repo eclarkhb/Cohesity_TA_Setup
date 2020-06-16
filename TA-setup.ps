@@ -1,0 +1,28 @@
+# 
+# 
+#
+
+# Make sure we have the latest Cohesity Module
+Update-Module -Name “Cohesity.PowerShell”
+
+# Setup Cohesity Credentials
+$username = "admin"
+$password = "admin"
+$secstr = New-Object -TypeName System.Security.SecureString
+$password.ToCharArray() | ForEach-Object {$secstr.AppendChar($_)}
+$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $username, $secstr
+
+### Configure Remote Clusters for Replication & Remote Management
+
+# Connect to cohesity-02
+Connect-CohesityCluster -Server 172.16.3.102 -Credential ($cred)
+
+# Create replication from cohesity02 -> cohesity-01
+Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.101 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=5;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=5;RemoteStorageDomainName="DefaultStorageDomain"}
+# Done with cohesity-02
+
+# Connect to cohesity-01
+Connect-CohesityCluster -Server 172.16.3.101 -Credential ($cred)
+
+# Create replication from cohesity02 -> cohesity-02
+Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.102 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=5;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=5;RemoteStorageDomainName="DefaultStorageDomain"}
