@@ -1,2 +1,12 @@
-# Powershell script for automating TA Lab Environment for Cohesity VMWare Demos
 #
+# TA Lab Environment Setup Script for VMWare Demos
+# Eric Clark
+#
+# This script does the following:
+# - set up cohesity-01 & cohesity-02 as replication targets
+# - Create a local SMB Share & add it as a source with some files
+# - Create an SMB View, Blacklist mp3 files
+# - Mount the View to Z:\ & create some editable files to show Previous Versions capability
+#
+# FUTURE
+# - Edit Policies, Set Protection Group for Bizapp VMs, SMB Share & View
