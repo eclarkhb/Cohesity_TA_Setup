@@ -1,12 +1,13 @@
-# TA Setup Script
+#
+# TA Lab Environment Setup Script for VMWare Demos
 # Eric Clark
-# 7/22/2020
+# Last Update 7/23/2020
 #
 # This script does the following:
-# - set up both clusters as replication targets
+# - set up cohesity-01 & cohesity-02 as replication targets
 # - Create a local SMB Share & add it as a source with some files
-# - Create an SMB View, mount it to Z:\ & create some files
-#
+# - Create an SMB View, Blacklist mp3 files
+# - Mount the View to Z:\ & create some editable files to show Previous Versions capability
 #
 
 # Make sure we have the latest Cohesity Module
