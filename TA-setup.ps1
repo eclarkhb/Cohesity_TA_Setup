@@ -6,9 +6,7 @@
 # Tested with 6.4.1b Cloud Demo - Azure
 # Instructions: 
 #.  Once Lab is ready, add Azure Cloud Archive Source 
-#.  Then execute this script from Powershell:
-#      $gitscript = Invoke-WebRequest https://raw.githubusercontent.com/eclarkhb/Cohesity_TA_Setup/master/TA-setup.ps1 -UseBasicParsing
-#      Invoke-Expression $($gitscript.content)
+#.  Then execute this script 
 #
 # This script does the following:
 # - set up cohesity-01 & cohesity-02 as replication targets
