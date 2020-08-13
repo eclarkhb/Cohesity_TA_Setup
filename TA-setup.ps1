@@ -14,6 +14,7 @@
 # - Create an SMB View, Blacklist mp3 files
 # - Mount the View to Z:\ & create some editable files to show Previous Versions capability
 # - Modify Gold Policy to backup every 20 minutes
+# - Modify Bronze Policy to backup once an hour
 # - Create a 25 Minute NAS Policy
 # - Add Replication to Gold, Bronze & 25Min NAS Policies
 # - Add Cloud Archive to Gold & 25Min NAS Policies
@@ -109,6 +110,11 @@ $naspolicy = get-CohesityProtectionPolicy -Names "25Min NAS"
 # Set Retention 
 $gold.IncrementalSchedulingPolicy.ContinuousSchedule.BackupIntervalMins = 20
 $gold.DaysToKeep = 1
+$bronze.IncrementalSchedulingPolicy.Periodicity = [Cohesity.Model.SchedulingPolicy+PeriodicityEnum]::KContinuous
+$bronze.IncrementalSchedulingPolicy.DailySchedule = $null
+$bronze.IncrementalSchedulingPolicy.ContinuousSchedule = [Cohesity.Model.ContinuousSchedule]::new()
+$bronze.IncrementalSchedulingPolicy.ContinuousSchedule.BackupIntervalMins = 60
+$bronze.DaysToKeep = 1
 $naspolicy.IncrementalSchedulingPolicy.ContinuousSchedule.BackupIntervalMins = 25
 
 $extretention = @([Cohesity.Model.ExtendedRetentionPolicy]::new(),[Cohesity.Model.ExtendedRetentionPolicy]::new())
