@@ -13,6 +13,10 @@
 # - Create a local SMB Share & add it as a source with some files
 # - Create an SMB View, Blacklist mp3 files
 # - Mount the View to Z:\ & create some editable files to show Previous Versions capability
+# - Modify Gold Policy to backup every 20 minutes
+# - Create a 25 Minute NAS Policy
+# - Add Replication to Gold, Bronze & 25Min NAS Policies
+# - Add Cloud Archive to Gold & 25Min NAS Policies
 #
 
 # Make sure we have the latest Cohesity Module
@@ -94,3 +98,64 @@ Echo this is the fifth file created in Cohesity view > viewtestfile5.txt
 
 # Create a fake mp3 file
 COPY viewtestfile5.txt C:\Users\Administrator\Desktop\badfile.mp3
+
+# Set up Policies
+new-CohesityProtectionPolicy -PolicyName "25Min NAS" -BackupInHours 1 -RetainInDays 1 -Confirm:$false
+
+$gold = get-CohesityProtectionPolicy -Names Gold
+$bronze = get-CohesityProtectionPolicy -Names Bronze
+$naspolicy = get-CohesityProtectionPolicy -Names "25Min NAS"
+
+# Set Retention 
+$gold.IncrementalSchedulingPolicy.ContinuousSchedule.BackupIntervalMins = 20
+$gold.DaysToKeep = 1
+$naspolicy.IncrementalSchedulingPolicy.ContinuousSchedule.BackupIntervalMins = 25
+
+$extretention = @([Cohesity.Model.ExtendedRetentionPolicy]::new(),[Cohesity.Model.ExtendedRetentionPolicy]::new())
+$extretention[0].Periodicity = [Cohesity.Model.ExtendedRetentionPolicy+PeriodicityEnum]::KDay
+$extretention[0].DaysToKeep = 30
+$extretention[0].Multiplier = 1
+$extretention[1].Periodicity = [Cohesity.Model.ExtendedRetentionPolicy+PeriodicityEnum]::KMonth
+$extretention[1].DaysToKeep = 1096
+$extretention[1].Multiplier = 1
+
+$gold.ExtendedRetentionPolicies = $extretention
+$naspolicy.ExtendedRetentionPolicies = $extretention
+
+# Add Replication
+$snappolicy = [Cohesity.Model.SnapshotReplicationCopyPolicy]::new()
+$snappolicy.Periodicity = [Cohesity.Model.ExtendedRetentionPolicy+PeriodicityEnum]::KEvery
+$snappolicy.CopyPartial = $true
+$snappolicy.DaysToKeep = 30
+$snappolicy.Multiplier = 1
+$target = [Cohesity.Model.ReplicationTargetSettings]::new()
+$target.ClusterID = $cohesity02.id
+$target.ClusterName = "Cohesity-02"
+$snappolicy.Target = $target
+
+$gold.SnapshotReplicationCopyPolicies = $snappolicy
+$bronze.SnapshotReplicationCopyPolicies = $snappolicy
+$naspolicy.SnapshotReplicationCopyPolicies = $snappolicy
+
+#Add Cloud Archive
+$vaultname = "Azure-Hot-Archive"
+$vault = get-CohesityVault -VaultName $VaultName
+$archpolicy = [Cohesity.Model.SnapshotArchivalCopyPolicy]::new()
+$archpolicy.Periodicity = [Cohesity.Model.ExtendedRetentionPolicy+PeriodicityEnum]::KEvery
+$archpolicy.CopyPartial = $true
+$archpolicy.DaysToKeep = 90
+$archpolicy.Multiplier = 1
+$archtarget = [Cohesity.Model.ArchivalExternalTarget]::new()
+$archtarget.VaultType = [Cohesity.Model.ArchivalExternalTarget+VaultTypeEnum]::KCloud
+$archtarget.VaultId = $Vault.id 
+$archtarget.VaultName = $vaultname 
+$archpolicy.Target = $archtarget
+
+$gold.SnapshotArchivalCopyPolicies = $archpolicy
+$naspolicy.SnapshotArchivalCopyPolicies = $archpolicy
+
+# Set Policies
+$gold | set-CohesityProtectionPolicy
+$bronze | set-CohesityProtectionPolicy
+$naspolicy | set-CohesityProtectionPolicy
+
