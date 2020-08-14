@@ -1,7 +1,7 @@
 #
 # TA Lab Environment Setup Script for VMWare Demos
 # Eric Clark
-# Last Update 7/23/2020
+# Last Update 8/14/2020
 #
 # Tested with 6.4.1b Cloud Demo - Azure
 # Instructions: 
