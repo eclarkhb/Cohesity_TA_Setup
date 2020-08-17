@@ -1,7 +1,7 @@
 #
 # TA Lab Environment Setup Script for VMWare Demos
 # Eric Clark
-# Last Update 8/14/2020
+# Last Update 8/17/2020
 #
 # Tested with 6.4.1b Cloud Demo - Azure
 # Instructions: 
@@ -148,22 +148,25 @@ $naspolicy.SnapshotReplicationCopyPolicies = $snappolicy
 #Add Cloud Archive
 $vaultname = "Azure-Hot-Archive"
 $vault = get-CohesityVault -VaultName $VaultName
-$archpolicy = [Cohesity.Model.SnapshotArchivalCopyPolicy]::new()
-$archpolicy.Periodicity = [Cohesity.Model.ExtendedRetentionPolicy+PeriodicityEnum]::KEvery
-$archpolicy.CopyPartial = $true
-$archpolicy.DaysToKeep = 90
-$archpolicy.Multiplier = 1
-$archtarget = [Cohesity.Model.ArchivalExternalTarget]::new()
-$archtarget.VaultType = [Cohesity.Model.ArchivalExternalTarget+VaultTypeEnum]::KCloud
-$archtarget.VaultId = $Vault.id 
-$archtarget.VaultName = $vaultname 
-$archpolicy.Target = $archtarget
 
-$gold.SnapshotArchivalCopyPolicies = $archpolicy
-$naspolicy.SnapshotArchivalCopyPolicies = $archpolicy
+# Only Add archival to the policies if the Vault was created before running this script
+
+If ($vault -ne $null) {
+  $archpolicy = [Cohesity.Model.SnapshotArchivalCopyPolicy]::new()
+  $archpolicy.Periodicity = [Cohesity.Model.ExtendedRetentionPolicy+PeriodicityEnum]::KEvery
+  $archpolicy.CopyPartial = $true
+  $archpolicy.DaysToKeep = 90
+  $archpolicy.Multiplier = 1
+  $archtarget = [Cohesity.Model.ArchivalExternalTarget]::new()
+  $archtarget.VaultType = [Cohesity.Model.ArchivalExternalTarget+VaultTypeEnum]::KCloud
+  $archtarget.VaultId = $Vault.id 
+  $archtarget.VaultName = $vaultname 
+  $archpolicy.Target = $archtarget
+  $gold.SnapshotArchivalCopyPolicies = $archpolicy
+  $naspolicy.SnapshotArchivalCopyPolicies = $archpolicy
+}
 
 # Set Policies
 $gold | set-CohesityProtectionPolicy
 $bronze | set-CohesityProtectionPolicy
 $naspolicy | set-CohesityProtectionPolicy
-
