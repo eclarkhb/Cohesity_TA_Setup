@@ -37,6 +37,8 @@ Connect-CohesityCluster -Server 172.16.3.102 -Credential ($cred)
 
 # Create replication from cohesity02 -> cohesity-01
 Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.101 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=5;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=5;RemoteStorageDomainName="DefaultStorageDomain"}
+# Save Cohesity-02 Configuration
+$cohesity02 = get-CohesityClusterConfiguration
 # Done with cohesity-02
 
 # Connect to cohesity-01
@@ -136,7 +138,7 @@ $snappolicy.DaysToKeep = 30
 $snappolicy.Multiplier = 1
 $target = [Cohesity.Model.ReplicationTargetSettings]::new()
 $target.ClusterID = $cohesity02.id
-$target.ClusterName = "Cohesity-02"
+$target.ClusterName = "cohesity-02"
 $snappolicy.Target = $target
 
 $gold.SnapshotReplicationCopyPolicies = $snappolicy
