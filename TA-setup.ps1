@@ -1,7 +1,7 @@
 #
 # TA Lab Environment Setup Script for VMWare Demos
 # Eric Clark
-# Last Update 8/17/2020
+# Last Update 8/18/2020
 #
 # Tested with 6.4.1b Cloud Demo - Azure
 # Instructions: 
@@ -34,18 +34,19 @@ $cred = new-object -typename System.Management.Automation.PSCredential -argument
 
 # Connect to cohesity-02
 Connect-CohesityCluster -Server 172.16.3.102 -Credential ($cred)
+$StorageDomain = get-CohesityStorageDomain
 
 # Create replication from cohesity02 -> cohesity-01
-Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.101 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=5;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=5;RemoteStorageDomainName="DefaultStorageDomain"}
+Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.101 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"}
 # Save Cohesity-02 Configuration
 $cohesity02 = get-CohesityClusterConfiguration
 # Done with cohesity-02
 
-# Connect to cohesity-01
+# Connect to cohesity-01$cohsiety02
 Connect-CohesityCluster -Server 172.16.3.101 -Credential ($cred)
 
 # Create replication from cohesity02 -> cohesity-02
-Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.102 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=5;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=5;RemoteStorageDomainName="DefaultStorageDomain"}
+Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.102 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"}
 
 # Set up local smb share 
 Mkdir c:\smb_share
@@ -170,3 +171,6 @@ If ($vault -ne $null) {
 $gold | set-CohesityProtectionPolicy
 $bronze | set-CohesityProtectionPolicy
 $naspolicy | set-CohesityProtectionPolicy
+
+# Create Protection Groups
+# New-CohesityProtectionJob -Name "CohesityView" -PolicyId $naspolicy.Id -StorageDomainId $storagedomain.id -ViewName "CohesityView"
