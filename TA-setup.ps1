@@ -18,7 +18,9 @@
 # - Create a 25 Minute NAS Policy
 # - Add Replication to Gold, Bronze & 25Min NAS Policies
 # - Add Cloud Archive to Gold & 25Min NAS Policies
-# - Create Ptoection Group for CohesityView
+# - Create Protection Group for CohesityView
+# - Create BizApp Protection Group, Autoprotecting the BizApp Folder
+#
 
 # Make sure we have the latest Cohesity Module
 echo "Updating Cohesity Powershell Module"
