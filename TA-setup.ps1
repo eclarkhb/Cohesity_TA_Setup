@@ -196,3 +196,8 @@ $indexing.allowPrefixes = "/"
 $ViewJob = New-CohesityProtectionJob -Name "CohesityView" -PolicyId $naspolicy.Id -StorageDomainId $storagedomain.id -ViewName $view.Name
 $ViewJob.IndexingPolicy = $indexing
 $ViewJob | set-CohesityProtectionJob
+
+# Create Protection Group for BizApp VMs 
+echo "Creating Protection Group for BizApp"
+$BizApp = get-CohesityProtectionSourceObject -Environments kVMWare -IncludeVMFolders | Where-Object { $_.Name -eq "BizApp" } | Where-Object { $_.VmWareProtectionSource.type -eq 'kFolder' }
+New-CohesityProtectionJob -Name BizApp -PolicyId $gold.id -StorageDomainId $storagedomain.id -Environment kVMWare -SourceIds $BizApp.id -ParentSourceID $BizApp.ParentId
