@@ -18,10 +18,7 @@
 # - Create a 25 Minute NAS Policy
 # - Add Replication to Gold, Bronze & 25Min NAS Policies
 # - Add Cloud Archive to Gold & 25Min NAS Policies
-# - Create Protection Group for CohesityView
-#
-
-$logfile = "C:\cohesity\ta_setup.log"
+# - Create Ptoection Group for CohesityView
 
 # Make sure we have the latest Cohesity Module
 echo "Updating Cohesity Powershell Module"
@@ -41,28 +38,28 @@ $cred = new-object -typename System.Management.Automation.PSCredential -argument
 
 Echo "Configuring Replication & Remote Management"
 # Connect to cohesity-02
-Connect-CohesityCluster -Server 172.16.3.102 -Credential ($cred) >> $logfile
+Connect-CohesityCluster -Server 172.16.3.102 -Credential ($cred)
 $StorageDomain = get-CohesityStorageDomain
 
 # Create replication from cohesity02 -> cohesity-01
-Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.101 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"} >> $logfile
+Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.101 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"}
 # Save Cohesity-02 Configuration
 $cohesity02 = get-CohesityClusterConfiguration
 # Done with cohesity-02
 
 # Connect to cohesity-01$cohsiety02
-Connect-CohesityCluster -Server 172.16.3.101 -Credential ($cred) >> $logfile
+Connect-CohesityCluster -Server 172.16.3.101 -Credential ($cred)
 
 # Create replication from cohesity02 -> cohesity-02
-Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.102 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"} >> $logfile
+Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.102 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"}
 
 # Set up local smb share 
 
 echo "Setting up local SMB Share c:\smb_share & creating files"
-Mkdir c:\smb_share >> $logfile
-Net share smb_share=c:\smb_share /grant:everyone,FULL >> $logfile
-CD C:\smb_share >> $logfile
-For ($I=1;$I -le 100;$i++) {fsutil file createnew “file$i.tmp” 1000} >> $logfile
+Mkdir c:\smb_share 
+Net share smb_share=c:\smb_share /grant:everyone,FULL 
+CD C:\smb_share 
+For ($I=1;$I -le 100;$i++) {fsutil file createnew “file$i.tmp” 1000} 
 
 # Register smb source
 echo "Registering SMB Source"
@@ -72,11 +69,11 @@ $smbsecstr = New-Object -TypeName System.Security.SecureString
 $smbpassword.ToCharArray() | ForEach-Object {$smbsecstr.AppendChar($_)}
 $smbcred = new-object -typename System.Management.Automation.PSCredential -argumentlist $smbusername, $smbsecstr
 
-Register-CohesityProtectionSourceSMB -Credential $smbcred -MountPath "\\adc.talabs.local\smb_share" >> $logfile
+Register-CohesityProtectionSourceSMB -Credential $smbcred -MountPath "\\adc.talabs.local\smb_share" 
 
 # Create Cohesity SMB View
 echo "Creating CohesityView"
-New-CohesityView -Name 'CohesityView' -StorageDomainName 'DefaultStorageDomain' -AccessProtocol KSMBOnly -BrowsableShares -CaseInsensitiveNames -QosPolicy 'TestAndDev High' >> $logfile
+New-CohesityView -Name 'CohesityView' -StorageDomainName 'DefaultStorageDomain' -AccessProtocol KSMBOnly -BrowsableShares -CaseInsensitiveNames -QosPolicy 'TestAndDev High' 
 $view = Get-CohesityView -ViewNames CohesityView
 
 # Set SMB Permissions
@@ -103,7 +100,7 @@ $view | Set-CohesityView
 
 # Mount CohesityView locally
 echo "Mounting the View to Z: & Creating some files"
-net use Z: \\cohesity-01.talabs.local\CohesityView /PERSISTENT:YES >> $logfile
+net use Z: \\cohesity-01.talabs.local\CohesityView /PERSISTENT:YES 
 
 # Create some editable files on CohesityView (to show Previous Versions)
 CD Z:\
@@ -118,7 +115,7 @@ COPY viewtestfile5.txt C:\Users\Administrator\Desktop\badfile.mp3
 
 # Set up Policies
 echo "Setting Gold, Bronze & 25Min NAS Policies"
-new-CohesityProtectionPolicy -PolicyName "25Min NAS" -BackupInHours 1 -RetainInDays 1 -Confirm:$false >> $logfile
+new-CohesityProtectionPolicy -PolicyName "25Min NAS" -BackupInHours 1 -RetainInDays 1 -Confirm:$false 
 
 $gold = get-CohesityProtectionPolicy -Names Gold
 $bronze = get-CohesityProtectionPolicy -Names Bronze
