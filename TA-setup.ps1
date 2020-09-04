@@ -1,7 +1,7 @@
 #
 # TA Lab Environment Setup Script for VMWare Demos
 # Eric Clark
-# Last Update 9/1/2020
+# Last Update 9/4/2020
 #
 # Tested with 6.4.1b Cloud Demo - Azure
 # Instructions: 
@@ -202,4 +202,6 @@ $ViewJob | set-CohesityProtectionJob
 # Create Protection Group for BizApp VMs 
 echo "Creating Protection Group for BizApp"
 $BizApp = get-CohesityProtectionSourceObject -Environments kVMWare -IncludeVMFolders | Where-Object { $_.Name -eq "BizApp" } | Where-Object { $_.VmWareProtectionSource.type -eq 'kFolder' }
-New-CohesityProtectionJob -Name BizApp -PolicyId $gold.id -StorageDomainId $storagedomain.id -Environment kVMWare -SourceIds $BizApp.id -ParentSourceID $BizApp.ParentId
+$BizAppJob = New-CohesityProtectionJob -Name BizApp -PolicyId $gold.id -StorageDomainId $storagedomain.id -Environment kVMWare -SourceIds $BizApp.id -ParentSourceID $BizApp.ParentId
+$BizAppJob.IndexingPolicy = $indexing
+$BizAppJob | set-CohesityProtectionJob
