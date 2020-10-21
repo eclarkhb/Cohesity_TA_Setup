@@ -1,7 +1,7 @@
 #
 # TA Lab Environment Setup Script for VMWare Demos
 # Eric Clark
-# Last Update 10/2/2020
+# Last Update 10/21/2020
 #
 # Tested with 6.5.1b Cloud Demo - Azure
 # Instructions: 
@@ -19,6 +19,7 @@
 # - Add Replication to Gold, Bronze & 25Min NAS Policies
 # - Add Cloud Archive to Gold & 25Min NAS Policies
 # - Create Ptoection Group for CohesityView
+# - Creates Data Security User - CISO
 
 # Make sure we have the latest Cohesity Module
 echo "Updating Cohesity Powershell Module"
@@ -201,3 +202,6 @@ $BizApp = get-CohesityProtectionSourceObject -Environments kVMWare -IncludeVMFol
 $BizAppJob = New-CohesityProtectionJob -Name BizApp -PolicyId $gold.id -StorageDomainId $storagedomain.id -Environment kVMWare -SourceIds $BizApp.id -ParentSourceID $BizApp.ParentId
 $BizAppJob.IndexingPolicy = $indexing
 $BizAppJob | set-CohesityProtectionJob
+
+# Add Data Seceurity User
+New-CohesityUser -Name CISO -Roles COHESITY_DATA_SECURITY -EmailAddress "test@cohesity.com" -Password "TechAccel1!"
