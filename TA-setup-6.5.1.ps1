@@ -1,7 +1,7 @@
 #
 # TA Lab Environment Setup Script for VMWare Demos
 # Eric Clark
-# Last Update 10/21/2020
+# Last Update 10/2/2020
 #
 # Tested with 6.5.1b Cloud Demo - Azure
 # Instructions: 
@@ -19,7 +19,6 @@
 # - Add Replication to Gold, Bronze & 25Min NAS Policies
 # - Add Cloud Archive to Gold & 25Min NAS Policies
 # - Create Ptoection Group for CohesityView
-# - Creates Data Security User - CISO
 
 # Make sure we have the latest Cohesity Module
 echo "Updating Cohesity Powershell Module"
@@ -44,13 +43,20 @@ $StorageDomain = get-CohesityStorageDomain
 Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.101 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"}
 # Save Cohesity-02 Configuration
 $cohesity02 = get-CohesityClusterConfiguration
+
+#Add Data Security User
+New-CohesityUser -Name CISO -Roles COHESITY_DATA_SECURITY -EmailAddress "test@cohesity.com" -Password "TechAccel1!"
+
 # Done with cohesity-02
 
-# Connect to cohesity-01$cohsiety02
+# Connect to cohesity-01
 Connect-CohesityCluster -Server 172.16.3.101 -Credential ($cred)
 
 # Create replication from cohesity02 -> cohesity-02
 Register-CohesityRemoteCluster -RemoteClusterIps 172.16.3.102 -RemoteClusterCredential ($cred) -EnableReplication -EnableRemoteAccess -StorageDomainPairs @{LocalStorageDomainId=$storagedomain.id;LocalStorageDomainName="DefaultStorageDomain";RemoteStorageDomainId=$storagedomain.id;RemoteStorageDomainName="DefaultStorageDomain"}
+
+#Add Data Security User
+New-CohesityUser -Name CISO -Roles COHESITY_DATA_SECURITY -EmailAddress "test@cohesity.com" -Password "TechAccel1!"
 
 # Set up local smb share 
 
@@ -180,10 +186,19 @@ If ($vault -ne $null) {
   echo "External Target Not Found"
 }
 
+# Set DataLock Policy
+$gold.WormRetentionType = [Cohesity.Model.ProtectionPolicy+WormRetentionTypeEnum]::KCompliance
+
+$CISOcred = new-object -typename System.Management.Automation.PSCredential -argumentlist "CISO", $secstr
+Connect-CohesityCluster -Server 172.16.3.101 -Credential ($CISOcred)
+
 # Set Policies
 $gold | set-CohesityProtectionPolicy
 $bronze | set-CohesityProtectionPolicy
 $naspolicy | set-CohesityProtectionPolicy
+
+# Reconect as Admin user
+Connect-CohesityCluster -Server 172.16.3.101 -Credential ($cred)
 
 # Create Protection Groups
 
@@ -203,5 +218,4 @@ $BizAppJob = New-CohesityProtectionJob -Name BizApp -PolicyId $gold.id -StorageD
 $BizAppJob.IndexingPolicy = $indexing
 $BizAppJob | set-CohesityProtectionJob
 
-# Add Data Seceurity User
-New-CohesityUser -Name CISO -Roles COHESITY_DATA_SECURITY -EmailAddress "test@cohesity.com" -Password "TechAccel1!"
+# END
